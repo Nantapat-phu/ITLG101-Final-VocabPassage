@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vocab Passage Fill-in Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+Thai:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#d9f1f4; --card:#ffffff; --ink:#0f172a; --muted:#64748b; --line:#d6e4ea;
+  --brand:#0ea5e9; --brand2:#7c3aed; --good:#16a34a; --bad:#dc2626;
+  --goodbg:#ecfdf5; --badbg:#fef2f2;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0; font-family:'Inter','Noto Sans Thai',sans-serif; color:var(--ink);
+  background:linear-gradient(180deg,#d9f3f5 0%,#f8fafc 100%);
+}
+header {
+  position:sticky; top:0; z-index:50; background:rgba(255,255,255,.93);
+  backdrop-filter:blur(14px); border-bottom:1px solid var(--line);
+}
+.wrap { max-width:1180px; margin:0 auto; padding:20px; }
+.hero { display:flex; justify-content:space-between; gap:16px; align-items:center; flex-wrap:wrap; }
+h1 { margin:0; font-size:clamp(28px,4vw,44px); letter-spacing:-.04em; }
+.sub { color:var(--muted); margin-top:6px; font-weight:700; }
+button {
+  border:0; border-radius:14px; padding:12px 16px; font-weight:800; cursor:pointer;
+  background:linear-gradient(90deg,var(--brand),var(--brand2)); color:white;
+}
+button.secondary { background:white; color:var(--ink); border:1px solid var(--line); }
+.stats { display:grid; grid-template-columns:repeat(4,minmax(120px,1fr)); gap:12px; margin:18px 0; }
+.stat {
+  background:white; border:1px solid var(--line); border-radius:18px; padding:15px;
+  box-shadow:0 12px 30px rgba(15,23,42,.05);
+}
+.stat span { color:var(--muted); font-weight:800; }
+.stat b { display:block; font-size:26px; }
+.progress { height:10px; background:#e5e7eb; border-radius:999px; overflow:hidden; }
+.bar { height:100%; width:0%; background:linear-gradient(90deg,var(--brand),var(--brand2)); transition:.25s; }
+.card {
+  background:rgba(255,255,255,.9); border:1px solid var(--line); border-radius:24px; padding:26px;
+  margin:18px 0; box-shadow:0 18px 50px rgba(15,23,42,.07);
+}
+.passage-title { font-size:24px; font-weight:900; margin:0 0 14px; color:#075985; }
+.passage {
+  font-size:22px; line-height:2.15; font-weight:600;
+}
+.blank {
+  display:inline-flex; align-items:center; justify-content:center;
+  min-width:190px; height:42px; padding:0 10px; margin:0 5px;
+  background:white; border:2px solid #0f172a; border-radius:3px;
+  vertical-align:middle; cursor:pointer; font-weight:800; color:#111827;
+}
+.blank:hover { outline:3px solid #bae6fd; }
+.blank.done.correct { border-color:var(--good); background:var(--goodbg); color:#166534; }
+.blank.done.wrong { border-color:var(--bad); background:var(--badbg); color:#991b1b; text-decoration:line-through; }
+.mark { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; margin-left:5px; font-size:14px; font-weight:900; }
+.mark.good { border:2px solid var(--good); color:var(--good); background:#f0fdf4; }
+.mark.bad { border:2px solid var(--bad); color:var(--bad); background:#fff1f2; }
+.panel {
+  position:fixed; inset:auto 18px 18px 18px; max-width:980px; margin:auto; z-index:100;
+  background:white; border:1px solid var(--line); border-radius:24px; padding:20px;
+  box-shadow:0 30px 80px rgba(15,23,42,.25); display:none;
+}
+.panel.show { display:block; }
+.panel-top { display:flex; justify-content:space-between; gap:10px; align-items:center; margin-bottom:12px; }
+.panel h2 { margin:0; font-size:22px; }
+.options { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+.opt {
+  background:#fff; border:1px solid var(--line); border-radius:16px; padding:14px;
+  font-size:17px; font-weight:900; text-align:left; color:#334155; cursor:pointer;
+}
+.opt:hover { border-color:#38bdf8; background:#f0f9ff; }
+.feedback { display:none; margin-top:14px; border-top:1px dashed #cbd5e1; padding-top:14px; }
+.feedback.show { display:block; }
+.answer-box { background:#f8fafc; border:1px solid var(--line); border-radius:16px; padding:12px; line-height:1.6; }
+.meaning-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:10px; }
+.mini { background:#f8fafc; border:1px solid var(--line); border-radius:12px; padding:10px; color:#334155; }
+.summary { display:none; }
+.summary.show { display:block; }
+@media(max-width:800px) {
+  .stats,.options,.meaning-grid { grid-template-columns:1fr; }
+  .passage { font-size:18px; line-height:2; }
+  .blank { min-width:135px; height:38px; }
+  .panel { inset:auto 10px 10px 10px; max-height:78vh; overflow:auto; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap hero">
+    <div>
+      <h1>Vocab Passage Fill-in Quiz</h1>
+      <div class="sub">3 บทความยาว • เติมคำศัพท์ครบ 34 คำ • คลิกช่องว่างเพื่อเลือกคำตอบ</div>
+    </div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap">
+      <button onclick="restart()">เริ่มใหม่</button>
+      <button class="secondary" onclick="showAllAnswers()">แสดงคำตอบทั้งหมด</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="stats">
+    <div class="stat"><span>ตอบแล้ว</span><b id="answered">0</b></div>
+    <div class="stat"><span>คะแนน</span><b id="score">0</b></div>
+    <div class="stat"><span>ถูกต้อง</span><b id="accuracy">0%</b></div>
+    <div class="stat"><span>ทั้งหมด</span><b id="total">34</b></div>
+  </div>
+  <div class="progress"><div class="bar" id="bar"></div></div>
+
+  <section class="card"><h2 class="passage-title">Passage 1: The Airport Documentary</h2><div class="passage">Our film club arrived at the airport before sunrise to record a short documentary. At the entrance, I could already <span class="blank" data-id="1"></span> fresh coffee from a small cafe, and that helped me wake up. Nina, the director, began to <span class="blank" data-id="2"></span> through the terminal with confidence, while Ken was <span class="blank" data-id="3"></span> near the check-in counter because our camera battery was missing. We had to <span class="blank" data-id="4"></span> a quick backup plan, so we decided to <span class="blank" data-id="5"></span> the shooting list and use a smaller camera first. While looking around, I managed to <span class="blank" data-id="6"></span> our guest speaker in the crowd, but I only caught a quick <span class="blank" data-id="7"></span> of his blue backpack before he disappeared behind a group of tourists. A security dog seemed able to <span class="blank" data-id="8"></span> something unusual near an unattended suitcase, so everyone moved back. Near the flower shop, the guest stopped to <span class="blank" data-id="9"></span> a rose, and then a child’s rubber ball began to <span class="blank" data-id="10"></span> across the floor. A cat suddenly <span class="blank" data-id="11"></span> onto a luggage cart, made a dramatic <span class="blank" data-id="12"></span> over a bag, and made everyone laugh. Ken wanted to start filming immediately, but Nina told him to <span class="blank" data-id="13"></span> because the microphone was not ready. When the interview finally began, we whispered <span class="blank" data-id="14"></span> to the guest. The video later began to <span class="blank" data-id="15"></span> online, and I knew I could always <span class="blank" data-id="16"></span> my team. After such a stressful morning, editing the final clip felt like a <span class="blank" data-id="17"></span>.</div></section><section class="card"><h2 class="passage-title">Passage 2: The Mountain Camp</h2><div class="passage">The following weekend, our English class went to a mountain camp for a vocabulary challenge. In the morning, we planned to <span class="blank" data-id="18"></span> to a viewpoint above the village, but the route was longer than expected, so we had to <span class="blank" data-id="19"></span> through a forest trail for several hours. After lunch, we took a slow <span class="blank" data-id="20"></span> around a quiet lake, and one little boy began to <span class="blank" data-id="21"></span> down the path as if he were in a cartoon. His brother tried to <span class="blank" data-id="22"></span> on one foot, but he almost fell into the mud. From the top of the hill, we stopped to <span class="blank" data-id="23"></span> the valley below us, and our guide reminded us that good <span class="blank" data-id="24"></span> was important because the trail would become dangerous after sunset. During dinner, one student started to <span class="blank" data-id="25"></span> about random game strategies. Another student was so excited that she began to <span class="blank" data-id="26"></span> too quickly for anyone to understand. Our teacher laughed, but he warned them not to <span class="blank" data-id="27"></span> all night because everyone needed sleep. Later, I <span class="blank" data-id="28"></span> an old map inside the cabin drawer, and it showed a hidden waterfall nearby.</div></section><section class="card"><h2 class="passage-title">Passage 3: The Final Project Trouble</h2><div class="passage">On Monday, our group had to present the camp story to the whole class. We tried to <span class="blank" data-id="29"></span> with another team because we needed to share the projector, but a misunderstanding almost <span class="blank" data-id="30"></span> us when both groups wanted the same time slot. Things got worse when the school van started to <span class="blank" data-id="31"></span> on the way back from the copy shop, so our posters arrived late. Our teacher told us to <span class="blank" data-id="32"></span> and review every word again before the quiz. She also warned us not to <span class="blank" data-id="33"></span> about the surprise questions to other classes. If we shared the answers, we would be <span class="blank" data-id="34"></span> with both the teacher and the department head. In the end, we apologized, fixed the schedule, and finished the presentation together.</div></section>
+
+  <section class="card summary" id="summary">
+    <h2>สรุปผล</h2>
+    <p id="summaryText"></p>
+  </section>
+</main>
+
+<section class="panel" id="panel">
+  <div class="panel-top">
+    <h2 id="panelTitle">เลือกคำตอบ</h2>
+    <button class="secondary" onclick="closePanel()">ปิด</button>
+  </div>
+  <div class="options" id="options"></div>
+  <div class="feedback" id="feedback">
+    <div class="answer-box" id="answerBox"></div>
+    <div style="margin-top:10px"><b>ความหมายของตัวเลือกทั้งหมด:</b></div>
+    <div class="meaning-grid" id="meaningGrid"></div>
+  </div>
+</section>
+
+<script>
+const blanks = [{"id": 1, "passage": 1, "answer": "Get a whiff of", "options": ["View (see)", "Spot (see)", "Sniff", "Get a whiff of", "Scent", "Sight (see)"], "meaning": "ได้กลิ่นจาง ๆ ลอยมา", "example": "I got a whiff of fresh coffee.", "optionMeanings": {"View (see)": "มองดูบางสิ่ง", "Spot (see)": "เห็นสิ่งที่หาอยู่", "Sniff": "สูดดมกลิ่น", "Get a whiff of": "ได้กลิ่นจาง ๆ ลอยมา", "Scent": "รับรู้กลิ่นบางอย่าง", "Sight (see)": "การมองเห็น"}}, {"id": 2, "passage": 1, "answer": "Stride", "options": ["Stroll", "Leap", "Skip (walk)", "Hop", "Pacing", "Stride"], "meaning": "เดินก้าวยาว ๆ", "example": "He strode into the meeting room confidently.", "optionMeanings": {"Stroll": "เดินเล่นสบาย ๆ", "Leap": "กระโดดไกล/สูง", "Skip (walk)": "กระโดดเบา ๆ แบบเด็ก", "Hop": "กระโดดขาเดียว", "Pacing": "เดินไปมาด้วยความกังวล", "Stride": "เดินก้าวยาว ๆ"}}, {"id": 3, "passage": 1, "answer": "Pacing", "options": ["Pacing", "Skip (walk)", "Bounce", "Hop", "Hike", "Stride"], "meaning": "เดินไปมาด้วยความกังวล", "example": "She was pacing in the room before the exam.", "optionMeanings": {"Pacing": "เดินไปมาด้วยความกังวล", "Skip (walk)": "กระโดดเบา ๆ แบบเด็ก", "Bounce": "กระโดดขึ้นลงหลายครั้ง", "Hop": "กระโดดขาเดียว", "Hike": "เดินป่า/ภูเขา", "Stride": "เดินก้าวยาว ๆ"}}, {"id": 4, "passage": 1, "answer": "Come up with", "options": ["Get along", "Take off", "Break down", "Come up with", "Come across", "Come between"], "meaning": "คิดหรือสร้างบางสิ่งขึ้นมา", "example": "She came up with a great idea for this project.", "optionMeanings": {"Get along": "เข้ากันได้ / ดำเนินไป / ออกจากที่หนึ่ง / เอาตัวรอด", "Take off": "บินขึ้น / ประสบความสำเร็จ / ถอดออก / เริ่ม / ลดลง / เลียนแบบ", "Break down": "เครื่องจักร/ยานพาหนะหยุดทำงาน", "Come up with": "คิดหรือสร้างบางสิ่งขึ้นมา", "Come across": "พบโดยบังเอิญ / สื่อความหมาย / ค้นพบ / แสดงตัวตน", "Come between": "สร้างความแตกแยกหรือรบกวนความสัมพันธ์"}}, {"id": 5, "passage": 1, "answer": "Go over", "options": ["Come up with", "Count on", "Come across", "Break down", "Take off", "Go over"], "meaning": "ทบทวนหรือตรวจอย่างละเอียด", "example": "Let's go over the plan one more time.", "optionMeanings": {"Come up with": "คิดหรือสร้างบางสิ่งขึ้นมา", "Count on": "พึ่งพา/ไว้วางใจ", "Come across": "พบโดยบังเอิญ / สื่อความหมาย / ค้นพบ / แสดงตัวตน", "Break down": "เครื่องจักร/ยานพาหนะหยุดทำงาน", "Take off": "บินขึ้น / ประสบความสำเร็จ / ถอดออก / เริ่ม / ลดลง / เลียนแบบ", "Go over": "ทบทวนหรือตรวจอย่างละเอียด"}}, {"id": 6, "passage": 1, "answer": "Spot (see)", "options": ["Spot (see)", "Get a whiff of", "Scent", "View (see)", "Glimpse", "Sight (see)"], "meaning": "เห็นสิ่งที่หาอยู่", "example": "She spotted her friend in the crowd.", "optionMeanings": {"Spot (see)": "เห็นสิ่งที่หาอยู่", "Get a whiff of": "ได้กลิ่นจาง ๆ ลอยมา", "Scent": "รับรู้กลิ่นบางอย่าง", "View (see)": "มองดูบางสิ่ง", "Glimpse": "เห็นแวบ ๆ", "Sight (see)": "การมองเห็น"}}, {"id": 7, "passage": 1, "answer": "Glimpse", "options": ["View (see)", "Glimpse", "Scent", "Get a whiff of", "Spot (see)", "Sniff"], "meaning": "เห็นแวบ ๆ", "example": "I caught a glimpse of the rainbow.", "optionMeanings": {"View (see)": "มองดูบางสิ่ง", "Glimpse": "เห็นแวบ ๆ", "Scent": "รับรู้กลิ่นบางอย่าง", "Get a whiff of": "ได้กลิ่นจาง ๆ ลอยมา", "Spot (see)": "เห็นสิ่งที่หาอยู่", "Sniff": "สูดดมกลิ่น"}}, {"id": 8, "passage": 1, "answer": "Scent", "options": ["Scent", "Spot (see)", "View (see)", "Glimpse", "Sniff", "Get a whiff of"], "meaning": "รับรู้กลิ่นบางอย่าง", "example": "The dog scented the food.", "optionMeanings": {"Scent": "รับรู้กลิ่นบางอย่าง", "Spot (see)": "เห็นสิ่งที่หาอยู่", "View (see)": "มองดูบางสิ่ง", "Glimpse": "เห็นแวบ ๆ", "Sniff": "สูดดมกลิ่น", "Get a whiff of": "ได้กลิ่นจาง ๆ ลอยมา"}}, {"id": 9, "passage": 1, "answer": "Sniff", "options": ["Get a whiff of", "View (see)", "Sniff", "Sight (see)", "Scent", "Glimpse"], "meaning": "สูดดมกลิ่น", "example": "He sniffed the flower.", "optionMeanings": {"Get a whiff of": "ได้กลิ่นจาง ๆ ลอยมา", "View (see)": "มองดูบางสิ่ง", "Sniff": "สูดดมกลิ่น", "Sight (see)": "การมองเห็น", "Scent": "รับรู้กลิ่นบางอย่าง", "Glimpse": "เห็นแวบ ๆ"}}, {"id": 10, "passage": 1, "answer": "Bounce", "options": ["Skip (walk)", "Pacing", "Bounce", "Stroll", "Leap", "Hike"], "meaning": "กระโดดขึ้นลงหลายครั้ง", "example": "The ball bounced on the floor after I dropped it.", "optionMeanings": {"Skip (walk)": "กระโดดเบา ๆ แบบเด็ก", "Pacing": "เดินไปมาด้วยความกังวล", "Bounce": "กระโดดขึ้นลงหลายครั้ง", "Stroll": "เดินเล่นสบาย ๆ", "Leap": "กระโดดไกล/สูง", "Hike": "เดินป่า/ภูเขา"}}, {"id": 11, "passage": 1, "answer": "Spring (jump)", "options": ["Stroll", "Stride", "Bounce", "Spring (jump)", "Skip (walk)", "Leap"], "meaning": "กระโดดขึ้นอย่างรวดเร็ว", "example": "The cat sprang onto the table to catch the toy.", "optionMeanings": {"Stroll": "เดินเล่นสบาย ๆ", "Stride": "เดินก้าวยาว ๆ", "Bounce": "กระโดดขึ้นลงหลายครั้ง", "Spring (jump)": "กระโดดขึ้นอย่างรวดเร็ว", "Skip (walk)": "กระโดดเบา ๆ แบบเด็ก", "Leap": "กระโดดไกล/สูง"}}, {"id": 12, "passage": 1, "answer": "Leap", "options": ["Stride", "Bounce", "Leap", "Trek", "Pacing", "Stroll"], "meaning": "กระโดดไกล/สูง", "example": "The cat leaped over the fence.", "optionMeanings": {"Stride": "เดินก้าวยาว ๆ", "Bounce": "กระโดดขึ้นลงหลายครั้ง", "Leap": "กระโดดไกล/สูง", "Trek": "เดินทางไกล", "Pacing": "เดินไปมาด้วยความกังวล", "Stroll": "เดินเล่นสบาย ๆ"}}, {"id": 13, "passage": 1, "answer": "Hold your horses", "options": ["Hit the books", "In hot water", "Spill the beans", "Piece of cake", "Break a leg", "Hold your horses"], "meaning": "รอก่อน / ใจเย็นก่อน", "example": "Hold your horses, or you will miss it.", "optionMeanings": {"Hit the books": "อ่านหนังสืออย่างจริงจัง", "In hot water": "มีปัญหา / ตกที่นั่งลำบาก", "Spill the beans": "บอกความลับ", "Piece of cake": "ง่ายมาก", "Break a leg": "ขอให้โชคดี", "Hold your horses": "รอก่อน / ใจเย็นก่อน"}}, {"id": 14, "passage": 1, "answer": "Break a leg", "options": ["Piece of cake", "Hit the books", "In hot water", "Hold your horses", "Spill the beans", "Break a leg"], "meaning": "ขอให้โชคดี", "example": "Before I went on stage, the director told me to break a leg.", "optionMeanings": {"Piece of cake": "ง่ายมาก", "Hit the books": "อ่านหนังสืออย่างจริงจัง", "In hot water": "มีปัญหา / ตกที่นั่งลำบาก", "Hold your horses": "รอก่อน / ใจเย็นก่อน", "Spill the beans": "บอกความลับ", "Break a leg": "ขอให้โชคดี"}}, {"id": 15, "passage": 1, "answer": "Take off", "options": ["Come across", "Come up with", "Get along", "Take off", "Come between", "Count on"], "meaning": "บินขึ้น / ประสบความสำเร็จ / ถอดออก / เริ่ม / ลดลง / เลียนแบบ", "example": "Her music career really took off after her hit single was released.", "optionMeanings": {"Come across": "พบโดยบังเอิญ / สื่อความหมาย / ค้นพบ / แสดงตัวตน", "Come up with": "คิดหรือสร้างบางสิ่งขึ้นมา", "Get along": "เข้ากันได้ / ดำเนินไป / ออกจากที่หนึ่ง / เอาตัวรอด", "Take off": "บินขึ้น / ประสบความสำเร็จ / ถอดออก / เริ่ม / ลดลง / เลียนแบบ", "Come between": "สร้างความแตกแยกหรือรบกวนความสัมพันธ์", "Count on": "พึ่งพา/ไว้วางใจ"}}, {"id": 16, "passage": 1, "answer": "Count on", "options": ["Take off", "Come up with", "Go over", "Break down", "Come across", "Count on"], "meaning": "พึ่งพา/ไว้วางใจ", "example": "You can count on me to support you.", "optionMeanings": {"Take off": "บินขึ้น / ประสบความสำเร็จ / ถอดออก / เริ่ม / ลดลง / เลียนแบบ", "Come up with": "คิดหรือสร้างบางสิ่งขึ้นมา", "Go over": "ทบทวนหรือตรวจอย่างละเอียด", "Break down": "เครื่องจักร/ยานพาหนะหยุดทำงาน", "Come across": "พบโดยบังเอิญ / สื่อความหมาย / ค้นพบ / แสดงตัวตน", "Count on": "พึ่งพา/ไว้วางใจ"}}, {"id": 17, "passage": 1, "answer": "Piece of cake", "options": ["In hot water", "Spill the beans", "Hit the books", "Piece of cake", "Break a leg", "Hold your horses"], "meaning": "ง่ายมาก", "example": "Beating this game was a piece of cake.", "optionMeanings": {"In hot water": "มีปัญหา / ตกที่นั่งลำบาก", "Spill the beans": "บอกความลับ", "Hit the books": "อ่านหนังสืออย่างจริงจัง", "Piece of cake": "ง่ายมาก", "Break a leg": "ขอให้โชคดี", "Hold your horses": "รอก่อน / ใจเย็นก่อน"}}, {"id": 18, "passage": 2, "answer": "Hike", "options": ["Leap", "Pacing", "Trek", "Stroll", "Hike", "Bounce"], "meaning": "เดินป่า/ภูเขา", "example": "We hiked in the mountains last weekend.", "optionMeanings": {"Leap": "กระโดดไกล/สูง", "Pacing": "เดินไปมาด้วยความกังวล", "Trek": "เดินทางไกล", "Stroll": "เดินเล่นสบาย ๆ", "Hike": "เดินป่า/ภูเขา", "Bounce": "กระโดดขึ้นลงหลายครั้ง"}}, {"id": 19, "passage": 2, "answer": "Trek", "options": ["Spring (jump)", "Pacing", "Stride", "Stroll", "Trek", "Bounce"], "meaning": "เดินทางไกล", "example": "They trekked through the jungle for two days.", "optionMeanings": {"Spring (jump)": "กระโดดขึ้นอย่างรวดเร็ว", "Pacing": "เดินไปมาด้วยความกังวล", "Stride": "เดินก้าวยาว ๆ", "Stroll": "เดินเล่นสบาย ๆ", "Trek": "เดินทางไกล", "Bounce": "กระโดดขึ้นลงหลายครั้ง"}}, {"id": 20, "passage": 2, "answer": "Stroll", "options": ["Spring (jump)", "Leap", "Stride", "Hike", "Stroll", "Bounce"], "meaning": "เดินเล่นสบาย ๆ", "example": "We strolled in the park after dinner.", "optionMeanings": {"Spring (jump)": "กระโดดขึ้นอย่างรวดเร็ว", "Leap": "กระโดดไกล/สูง", "Stride": "เดินก้าวยาว ๆ", "Hike": "เดินป่า/ภูเขา", "Stroll": "เดินเล่นสบาย ๆ", "Bounce": "กระโดดขึ้นลงหลายครั้ง"}}, {"id": 21, "passage": 2, "answer": "Skip (walk)", "options": ["Skip (walk)", "Trek", "Hop", "Bounce", "Leap", "Stroll"], "meaning": "กระโดดเบา ๆ แบบเด็ก", "example": "She skipped down the street happily.", "optionMeanings": {"Skip (walk)": "กระโดดเบา ๆ แบบเด็ก", "Trek": "เดินทางไกล", "Hop": "กระโดดขาเดียว", "Bounce": "กระโดดขึ้นลงหลายครั้ง", "Leap": "กระโดดไกล/สูง", "Stroll": "เดินเล่นสบาย ๆ"}}, {"id": 22, "passage": 2, "answer": "Hop", "options": ["Spring (jump)", "Trek", "Stroll", "Hop", "Skip (walk)", "Bounce"], "meaning": "กระโดดขาเดียว", "example": "The child hopped on one foot.", "optionMeanings": {"Spring (jump)": "กระโดดขึ้นอย่างรวดเร็ว", "Trek": "เดินทางไกล", "Stroll": "เดินเล่นสบาย ๆ", "Hop": "กระโดดขาเดียว", "Skip (walk)": "กระโดดเบา ๆ แบบเด็ก", "Bounce": "กระโดดขึ้นลงหลายครั้ง"}}, {"id": 23, "passage": 2, "answer": "View (see)", "options": ["Sight (see)", "Get a whiff of", "Sniff", "Glimpse", "Spot (see)", "View (see)"], "meaning": "มองดูบางสิ่ง", "example": "We viewed the city from the top of the tower.", "optionMeanings": {"Sight (see)": "การมองเห็น", "Get a whiff of": "ได้กลิ่นจาง ๆ ลอยมา", "Sniff": "สูดดมกลิ่น", "Glimpse": "เห็นแวบ ๆ", "Spot (see)": "เห็นสิ่งที่หาอยู่", "View (see)": "มองดูบางสิ่ง"}}, {"id": 24, "passage": 2, "answer": "Sight (see)", "options": ["Sniff", "Spot (see)", "Sight (see)", "Scent", "Glimpse", "View (see)"], "meaning": "การมองเห็น", "example": "She lost her sight after the accident.", "optionMeanings": {"Sniff": "สูดดมกลิ่น", "Spot (see)": "เห็นสิ่งที่หาอยู่", "Sight (see)": "การมองเห็น", "Scent": "รับรู้กลิ่นบางอย่าง", "Glimpse": "เห็นแวบ ๆ", "View (see)": "มองดูบางสิ่ง"}}, {"id": 25, "passage": 2, "answer": "Prattle", "options": ["Get along", "Stride", "Trek", "Bounce", "Count on", "Prattle"], "meaning": "พูดเรื่อยเปื่อย/ไร้สาระ", "example": "He kept prattling about video games during the meeting.", "optionMeanings": {"Get along": "เข้ากันได้ / ดำเนินไป / ออกจากที่หนึ่ง / เอาตัวรอด", "Stride": "เดินก้าวยาว ๆ", "Trek": "เดินทางไกล", "Bounce": "กระโดดขึ้นลงหลายครั้ง", "Count on": "พึ่งพา/ไว้วางใจ", "Prattle": "พูดเรื่อยเปื่อย/ไร้สาระ"}}, {"id": 26, "passage": 2, "answer": "Babble", "options": ["Stride", "Spill the beans", "Babble", "Skip (walk)", "Glimpse", "Pacing"], "meaning": "พูดเร็ว ฟังไม่ค่อยรู้เรื่อง", "example": "My friend babbled after meeting her favorite artist.", "optionMeanings": {"Stride": "เดินก้าวยาว ๆ", "Spill the beans": "บอกความลับ", "Babble": "พูดเร็ว ฟังไม่ค่อยรู้เรื่อง", "Skip (walk)": "กระโดดเบา ๆ แบบเด็ก", "Glimpse": "เห็นแวบ ๆ", "Pacing": "เดินไปมาด้วยความกังวล"}}, {"id": 27, "passage": 2, "answer": "Rattle on", "options": ["Sniff", "Get along", "Break down", "Rattle on", "Sight (see)", "Spill the beans"], "meaning": "พูดยาวไม่หยุดแบบไร้สาระ", "example": "He rattled on about his vacation for an hour.", "optionMeanings": {"Sniff": "สูดดมกลิ่น", "Get along": "เข้ากันได้ / ดำเนินไป / ออกจากที่หนึ่ง / เอาตัวรอด", "Break down": "เครื่องจักร/ยานพาหนะหยุดทำงาน", "Rattle on": "พูดยาวไม่หยุดแบบไร้สาระ", "Sight (see)": "การมองเห็น", "Spill the beans": "บอกความลับ"}}, {"id": 28, "passage": 2, "answer": "Come across", "options": ["Count on", "Get along", "Come between", "Go over", "Come across", "Come up with"], "meaning": "พบโดยบังเอิญ / สื่อความหมาย / ค้นพบ / แสดงตัวตน", "example": "I came across an old friend at the supermarket yesterday.", "optionMeanings": {"Count on": "พึ่งพา/ไว้วางใจ", "Get along": "เข้ากันได้ / ดำเนินไป / ออกจากที่หนึ่ง / เอาตัวรอด", "Come between": "สร้างความแตกแยกหรือรบกวนความสัมพันธ์", "Go over": "ทบทวนหรือตรวจอย่างละเอียด", "Come across": "พบโดยบังเอิญ / สื่อความหมาย / ค้นพบ / แสดงตัวตน", "Come up with": "คิดหรือสร้างบางสิ่งขึ้นมา"}}, {"id": 29, "passage": 3, "answer": "Get along", "options": ["Count on", "Come between", "Take off", "Break down", "Get along", "Go over"], "meaning": "เข้ากันได้ / ดำเนินไป / ออกจากที่หนึ่ง / เอาตัวรอด", "example": "Despite the challenges, we managed to get along with what we had.", "optionMeanings": {"Count on": "พึ่งพา/ไว้วางใจ", "Come between": "สร้างความแตกแยกหรือรบกวนความสัมพันธ์", "Take off": "บินขึ้น / ประสบความสำเร็จ / ถอดออก / เริ่ม / ลดลง / เลียนแบบ", "Break down": "เครื่องจักร/ยานพาหนะหยุดทำงาน", "Get along": "เข้ากันได้ / ดำเนินไป / ออกจากที่หนึ่ง / เอาตัวรอด", "Go over": "ทบทวนหรือตรวจอย่างละเอียด"}}, {"id": 30, "passage": 3, "answer": "Come between", "options": ["Take off", "Break down", "Come between", "Come across", "Come up with", "Get along"], "meaning": "สร้างความแตกแยกหรือรบกวนความสัมพันธ์", "example": "Don't ever come between me and my friend again!", "optionMeanings": {"Take off": "บินขึ้น / ประสบความสำเร็จ / ถอดออก / เริ่ม / ลดลง / เลียนแบบ", "Break down": "เครื่องจักร/ยานพาหนะหยุดทำงาน", "Come between": "สร้างความแตกแยกหรือรบกวนความสัมพันธ์", "Come across": "พบโดยบังเอิญ / สื่อความหมาย / ค้นพบ / แสดงตัวตน", "Come up with": "คิดหรือสร้างบางสิ่งขึ้นมา", "Get along": "เข้ากันได้ / ดำเนินไป / ออกจากที่หนึ่ง / เอาตัวรอด"}}, {"id": 31, "passage": 3, "answer": "Break down", "options": ["Break down", "Take off", "Come up with", "Count on", "Get along", "Come across"], "meaning": "เครื่องจักร/ยานพาหนะหยุดทำงาน", "example": "I am late because my car broke down this morning.", "optionMeanings": {"Break down": "เครื่องจักร/ยานพาหนะหยุดทำงาน", "Take off": "บินขึ้น / ประสบความสำเร็จ / ถอดออก / เริ่ม / ลดลง / เลียนแบบ", "Come up with": "คิดหรือสร้างบางสิ่งขึ้นมา", "Count on": "พึ่งพา/ไว้วางใจ", "Get along": "เข้ากันได้ / ดำเนินไป / ออกจากที่หนึ่ง / เอาตัวรอด", "Come across": "พบโดยบังเอิญ / สื่อความหมาย / ค้นพบ / แสดงตัวตน"}}, {"id": 32, "passage": 3, "answer": "Hit the books", "options": ["Break a leg", "Hold your horses", "Hit the books", "Spill the beans", "Piece of cake", "In hot water"], "meaning": "อ่านหนังสืออย่างจริงจัง", "example": "I need to hit the books if I want to pass the exam tomorrow.", "optionMeanings": {"Break a leg": "ขอให้โชคดี", "Hold your horses": "รอก่อน / ใจเย็นก่อน", "Hit the books": "อ่านหนังสืออย่างจริงจัง", "Spill the beans": "บอกความลับ", "Piece of cake": "ง่ายมาก", "In hot water": "มีปัญหา / ตกที่นั่งลำบาก"}}, {"id": 33, "passage": 3, "answer": "Spill the beans", "options": ["Hit the books", "Break a leg", "Spill the beans", "Piece of cake", "In hot water", "Hold your horses"], "meaning": "บอกความลับ", "example": "If you don't spill the beans, you are grounded.", "optionMeanings": {"Hit the books": "อ่านหนังสืออย่างจริงจัง", "Break a leg": "ขอให้โชคดี", "Spill the beans": "บอกความลับ", "Piece of cake": "ง่ายมาก", "In hot water": "มีปัญหา / ตกที่นั่งลำบาก", "Hold your horses": "รอก่อน / ใจเย็นก่อน"}}, {"id": 34, "passage": 3, "answer": "In hot water", "options": ["Piece of cake", "Break a leg", "In hot water", "Hit the books", "Spill the beans", "Hold your horses"], "meaning": "มีปัญหา / ตกที่นั่งลำบาก", "example": "If we do not fix this vase, we will be in hot water with mom.", "optionMeanings": {"Piece of cake": "ง่ายมาก", "Break a leg": "ขอให้โชคดี", "In hot water": "มีปัญหา / ตกที่นั่งลำบาก", "Hit the books": "อ่านหนังสืออย่างจริงจัง", "Spill the beans": "บอกความลับ", "Hold your horses": "รอก่อน / ใจเย็นก่อน"}}];
+let answers = {};
+let activeId = null;
+
+function getBlank(id) {
+  return blanks.find(b => b.id === Number(id));
+}
+
+function updateStats() {
+  const answeredCount = Object.keys(answers).length;
+  const correctCount = Object.values(answers).filter(a => a.correct).length;
+  document.getElementById('answered').textContent = answeredCount;
+  document.getElementById('score').textContent = correctCount;
+  document.getElementById('accuracy').textContent = answeredCount ? Math.round(correctCount / answeredCount * 100) + '%' : '0%';
+  document.getElementById('bar').style.width = (answeredCount / blanks.length * 100) + '%';
+  if (answeredCount === blanks.length) {
+    document.getElementById('summary').classList.add('show');
+    document.getElementById('summaryText').textContent = `คุณได้ ${correctCount} จาก ${blanks.length} ข้อ (${Math.round(correctCount / blanks.length * 100)}%)`;
+  } else {
+    document.getElementById('summary').classList.remove('show');
+  }
+}
+
+function renderBlank(id) {
+  const el = document.querySelector(`.blank[data-id="${id}"]`);
+  const b = getBlank(id);
+  const a = answers[id];
+  el.innerHTML = '';
+  el.classList.remove('done','correct','wrong');
+  if (a) {
+    el.textContent = a.choice;
+    el.classList.add('done', a.correct ? 'correct' : 'wrong');
+    const mark = document.createElement('span');
+    mark.className = 'mark ' + (a.correct ? 'good' : 'bad');
+    mark.textContent = a.correct ? '✓' : '×';
+    el.insertAdjacentElement('afterend', mark);
+  }
+}
+
+function openPanel(id) {
+  activeId = Number(id);
+  const b = getBlank(activeId);
+  document.getElementById('panelTitle').textContent = `ข้อที่ ${activeId} • Passage ${b.passage}`;
+  const opts = document.getElementById('options');
+  opts.innerHTML = '';
+  b.options.forEach(o => {
+    const btn = document.createElement('button');
+    btn.className = 'opt';
+    btn.textContent = o;
+    btn.onclick = () => choose(o);
+    opts.appendChild(btn);
+  });
+  const existing = answers[activeId];
+  renderFeedback(existing ? existing.choice : null);
+  document.getElementById('panel').classList.add('show');
+}
+
+function choose(choice) {
+  const b = getBlank(activeId);
+  answers[activeId] = { choice, correct: choice === b.answer };
+  document.querySelectorAll(`.blank[data-id="${activeId}"] + .mark`).forEach(m => m.remove());
+  renderBlank(activeId);
+  renderFeedback(choice);
+  updateStats();
+}
+
+function renderFeedback(choice) {
+  const b = getBlank(activeId);
+  const fb = document.getElementById('feedback');
+  const grid = document.getElementById('meaningGrid');
+  if (!choice) {
+    fb.classList.remove('show');
+    grid.innerHTML = '';
+    return;
+  }
+  fb.classList.add('show');
+  const correct = choice === b.answer;
+  document.getElementById('answerBox').innerHTML =
+    `<b>${correct ? '✅ ถูกต้อง' : '❌ ยังไม่ถูก'}</b><br>` +
+    `<b>คำตอบที่ถูก:</b> ${b.answer}<br>` +
+    `<b>ความหมาย:</b> ${b.meaning}<br>` +
+    `<b>ตัวอย่าง:</b> ${b.example}`;
+  grid.innerHTML = '';
+  b.options.forEach(o => {
+    const div = document.createElement('div');
+    div.className = 'mini';
+    div.innerHTML = `<b>${o}</b><br>${b.optionMeanings[o]}`;
+    grid.appendChild(div);
+  });
+}
+
+function closePanel() {
+  document.getElementById('panel').classList.remove('show');
+}
+
+function restart() {
+  answers = {};
+  document.querySelectorAll('.mark').forEach(m => m.remove());
+  document.querySelectorAll('.blank').forEach(el => {
+    el.textContent = '';
+    el.classList.remove('done','correct','wrong');
+  });
+  closePanel();
+  updateStats();
+}
+
+function showAllAnswers() {
+  blanks.forEach(b => {
+    answers[b.id] = { choice: b.answer, correct: true };
+    document.querySelectorAll(`.blank[data-id="${b.id}"] + .mark`).forEach(m => m.remove());
+    renderBlank(b.id);
+  });
+  updateStats();
+}
+
+document.querySelectorAll('.blank').forEach(el => {
+  el.addEventListener('click', () => openPanel(el.dataset.id));
+});
+updateStats();
+</script>
+</body>
+</html>
